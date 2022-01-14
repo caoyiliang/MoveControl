@@ -8,7 +8,10 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>CSoft.$(AssemblyName)</PackageId>
 		<Authors>CSoft</Authors>
+		<Version>6.0.0</Version>
 		<PackageIcon>logo.png</PackageIcon>
+		<RepositoryUrl>https://github.com/caoyiliang/MoveControl</RepositoryUrl>
+		<Description>如图IDE一样拖拽控件，调整大小，只需 控件名.CanMove()；即可。</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
