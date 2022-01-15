@@ -2,7 +2,7 @@
 
 namespace MoveControl
 {
-    public partial class MoveControl : UserControl
+    internal partial class MoveControl : UserControl
     {
         public MoveControl(Control control)
         {

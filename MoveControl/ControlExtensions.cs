@@ -2,52 +2,50 @@
 {
     public static class ControlExtensions
     {
-        private static MoveControl mControl = null;
+        private static MoveControl _mControl = null;
+        private static Point _lastPoint = new();
+
+        private static Dictionary<Control, ControlEvent> _events = new();
         /// <summary>
         /// 设置控件移动和调整大小
         /// </summary>
         public static void CanMove(this Control control)
         {
-            Point lastPoint = new Point();
+            var controlEvent = new ControlEvent();
+            controlEvent.MouseDown = (sender, e) => MouseDown(control);
+            control.MouseDown += controlEvent.MouseDown;
 
-            #region 绑定事件
+            controlEvent.MouseClick = (sender, e) => control.BringToFront();
+            control.MouseClick += controlEvent.MouseClick;
 
-            control.MouseDown += (sender, e) =>
-            {
-                lastPoint = MouseDown(control);
-            };
-
-            control.MouseClick += (sender, e) =>
-            {
-                control.BringToFront();
-            };
-
-            control.MouseMove += (sender, e) =>
+            controlEvent.MouseMove = (sender, e) =>
             {
                 Point currentPoint = new Point();
                 Cursor.Current = Cursors.SizeAll;
                 if (e.Button == MouseButtons.Left)
                 {
                     currentPoint = Cursor.Position;
-                    control.Location = new Point(control.Location.X + currentPoint.X - lastPoint.X,
-                        control.Location.Y + currentPoint.Y - lastPoint.Y);
+                    control.Location = new Point(control.Location.X + currentPoint.X - _lastPoint.X,
+                        control.Location.Y + currentPoint.Y - _lastPoint.Y);
 
                     //移动时刷新实线
-                    mControl.DrawSolids();
+                    _mControl.DrawSolids();
 
                     control.BringToFront();
                 }
 
-                lastPoint = currentPoint;
+                _lastPoint = currentPoint;
             };
+            control.MouseMove += controlEvent.MouseMove;
 
-            control.LostFocus += (sender, e) =>
+            controlEvent.LostFocus = (sender, e) =>
             {
                 ClearParent(control);
                 ClearChild(control);
             };
+            control.LostFocus += controlEvent.LostFocus;
 
-            control.MouseUp += (sender, e) =>
+            controlEvent.MouseUp = (sender, e) =>
             {
                 foreach (Control ctrl in control.Parent.Controls)
                 {
@@ -59,7 +57,7 @@
                             {
                                 control.Parent = ctrl;
                                 control.Location = ctrl.PointToClient(Cursor.Position);
-                                lastPoint = MouseDown(control);
+                                MouseDown(control);
                             }
                     }
                     else
@@ -68,26 +66,79 @@
                         {
                             control.Parent = control.Parent.Parent;
                             control.Location = control.Parent.PointToClient(Cursor.Position);
-                            lastPoint = MouseDown(control);
+                            MouseDown(control);
                         }
                     }
                 }
             };
+            control.MouseUp += controlEvent.MouseUp;
 
-            #endregion
+            _events.Add(control, controlEvent);
         }
 
-        private static Point MouseDown(Control control)
+        /// <summary>
+        /// 停止控件移动和调整大小
+        /// </summary>
+        public static void StopMove(this Control control)
         {
-            Point lastPoint = Cursor.Position;
+            control.MouseDown -= _events[control].MouseDown;
+            control.MouseUp -= _events[control].MouseUp;
+            control.MouseMove -= _events[control].MouseMove;
+            control.MouseClick -= _events[control].MouseClick;
+            control.LostFocus -= _events[control].LostFocus;
+            _events.Remove(control);
+        }
+
+        /// <summary>
+        /// 设置控件内所以控件可以移动和调整大小
+        /// </summary>
+        public static void CanMoveChild(this Control control)
+        {
+            ChildEventBindig(control.Controls);
+        }
+
+        /// <summary>
+        /// 停止控件内所以控件可以移动和调整大小
+        /// </summary>
+        public static void StopMoveChild(this Control control)
+        {
+            ChildEventUnBindig(control.Controls);
+        }
+
+        private static void ChildEventUnBindig(Control.ControlCollection controls)
+        {
+            foreach (Control item in controls)
+            {
+                if (item is not MoveControl)
+                {
+                    item.StopMove();
+                    ChildEventBindig(item.Controls);
+                }
+            }
+        }
+
+        private static void ChildEventBindig(Control.ControlCollection controls)
+        {
+            foreach (Control item in controls)
+            {
+                if (item is not MoveControl)
+                {
+                    item.CanMove();
+                    ChildEventBindig(item.Controls);
+                }
+            }
+        }
+
+        private static void MouseDown(Control control)
+        {
+            _lastPoint = Cursor.Position;
 
             ClearParent(control);
             ClearChild(control);
-            if (mControl != null) mControl.Dispose();
-            mControl = new MoveControl(control);
-            mControl.BackColor = Color.Transparent;
-            control.Parent.Controls.Add(mControl);
-            return lastPoint;
+            if (_mControl != null) _mControl.Dispose();
+            _mControl = new MoveControl(control);
+            _mControl.BackColor = Color.Transparent;
+            control.Parent.Controls.Add(_mControl);
         }
 
         private static void ClearParent(Control control)
