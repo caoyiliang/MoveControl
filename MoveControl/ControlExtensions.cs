@@ -6,6 +6,7 @@
         private static Point _lastPoint = new();
 
         private static Dictionary<Control, ControlEvent> _events = new();
+        private static Point controlCursorPosition;
         /// <summary>
         /// 设置控件移动和调整大小
         /// </summary>
@@ -50,13 +51,14 @@
                 foreach (Control ctrl in control.Parent.Controls)
                 {
                     var form = ctrl.FindForm();
+                    var current = Cursor.Position;
                     if (control.Parent is Form)
                     {
                         if (control.Name != ctrl.Name)
                             if (ctrl.RectangleToScreen(ctrl.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle)))
                             {
                                 control.Parent = ctrl;
-                                control.Location = ctrl.PointToClient(Cursor.Position);
+                                control.Location = ctrl.PointToClient(new Point(current.X - controlCursorPosition.X, current.Y - controlCursorPosition.Y));
                                 MouseDown(control);
                             }
                     }
@@ -65,7 +67,7 @@
                         if (!ctrl.Parent.RectangleToScreen(ctrl.Parent.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle)))
                         {
                             control.Parent = control.Parent.Parent;
-                            control.Location = control.Parent.PointToClient(Cursor.Position);
+                            control.Location = control.Parent.PointToClient(new Point(current.X - controlCursorPosition.X, current.Y - controlCursorPosition.Y));
                             MouseDown(control);
                         }
                     }
@@ -132,7 +134,7 @@
         private static void MouseDown(Control control)
         {
             _lastPoint = Cursor.Position;
-
+            controlCursorPosition = control.PointToClient(_lastPoint);
             ClearParent(control);
             ClearChild(control);
             if (_mControl != null) _mControl.Dispose();
