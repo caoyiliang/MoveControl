@@ -2,19 +2,19 @@
 {
     public static class ControlExtensions
     {
+        private static MoveControl mControl = null;
         /// <summary>
         /// 设置控件移动和调整大小
         /// </summary>
         public static void CanMove(this Control control)
         {
-            MoveControl mControl = null;
             Point lastPoint = new Point();
 
             #region 绑定事件
 
             control.MouseDown += (sender, e) =>
             {
-                lastPoint = MouseDown(control, ref mControl);
+                lastPoint = MouseDown(control);
             };
 
             control.MouseClick += (sender, e) =>
@@ -52,34 +52,23 @@
                 foreach (Control ctrl in control.Parent.Controls)
                 {
                     var form = ctrl.FindForm();
-                    if ((ctrl is not MoveControl) && ctrl.Name != control.Name)
+                    if (control.Parent is Form)
                     {
-                        if (ctrl.RectangleToScreen(ctrl.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle)))
-                        {
-                            control.Parent = ctrl;
-                            control.Location = ctrl.PointToClient(Cursor.Position);
-                            lastPoint = MouseDown(control, ref mControl);
-                        }
-                        else
-                        {
-                            if (control.Parent != null && control.Parent.Parent is Form)
+                        if (control.Name != ctrl.Name)
+                            if (ctrl.RectangleToScreen(ctrl.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle)))
                             {
-                                control.Parent = control.Parent.Parent;
-                                control.Location = control.Parent.PointToClient(Cursor.Position);
-                                lastPoint = MouseDown(control, ref mControl);
+                                control.Parent = ctrl;
+                                control.Location = ctrl.PointToClient(Cursor.Position);
+                                lastPoint = MouseDown(control);
                             }
-                        }
                     }
-                    else if ((ctrl is not MoveControl) && ctrl.Name == control.Name)
+                    else
                     {
-                        if (control.Parent != null && control.Parent.Parent is Form)
+                        if (!ctrl.Parent.RectangleToScreen(ctrl.Parent.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle)))
                         {
-                            if (!ctrl.Parent.RectangleToScreen(ctrl.Parent.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle)))
-                            {
-                                control.Parent = control.Parent.Parent;
-                                control.Location = control.Parent.PointToClient(Cursor.Position);
-                                lastPoint = MouseDown(control, ref mControl);
-                            }
+                            control.Parent = control.Parent.Parent;
+                            control.Location = control.Parent.PointToClient(Cursor.Position);
+                            lastPoint = MouseDown(control);
                         }
                     }
                 }
@@ -88,16 +77,16 @@
             #endregion
         }
 
-        private static Point MouseDown(Control control, ref MoveControl fControl)
+        private static Point MouseDown(Control control)
         {
             Point lastPoint = Cursor.Position;
 
             ClearParent(control);
             ClearChild(control);
-            if (fControl == null)
-                fControl = new MoveControl(control);
-            fControl.BackColor = Color.Transparent;
-            control.Parent.Controls.Add(fControl);
+            if (mControl != null) mControl.Dispose();
+            mControl = new MoveControl(control);
+            mControl.BackColor = Color.Transparent;
+            control.Parent.Controls.Add(mControl);
             return lastPoint;
         }
 
@@ -109,7 +98,9 @@
                 var controls = nctrl.Parent.Controls;
                 foreach (Control ctrl in controls)
                     if (ctrl is MoveControl)
+                    {
                         ctrl.Visible = false;
+                    }
                 nctrl = nctrl.Parent;
             }
         }
@@ -119,7 +110,9 @@
             foreach (Control ctrl in control.Controls)
             {
                 if (ctrl is MoveControl)
+                {
                     ctrl.Visible = false;
+                }
                 ClearChild(ctrl);
             }
         }
