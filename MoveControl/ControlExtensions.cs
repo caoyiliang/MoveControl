@@ -75,6 +75,16 @@
             };
             control.MouseUp += controlEvent.MouseUp;
 
+            controlEvent.KeyUp = (sender, e) =>
+            {
+                if (e.KeyCode == Keys.Delete)
+                {
+                    control.Dispose();
+                    _events.Remove(control);
+                }
+            };
+            control.KeyUp += controlEvent.KeyUp;
+
             _events.Add(control, controlEvent);
         }
 
@@ -88,6 +98,7 @@
             control.MouseMove -= _events[control].MouseMove;
             control.MouseClick -= _events[control].MouseClick;
             control.LostFocus -= _events[control].LostFocus;
+            control.KeyUp -= _events[control].KeyUp;
             _events.Remove(control);
         }
 
@@ -114,7 +125,8 @@
                 if (item is not MoveControl)
                 {
                     item.StopMove();
-                    ChildEventBindig(item.Controls);
+                    if (item is not PropertyGrid)
+                        ChildEventBindig(item.Controls);
                 }
             }
         }
@@ -126,7 +138,8 @@
                 if (item is not MoveControl)
                 {
                     item.CanMove();
-                    ChildEventBindig(item.Controls);
+                    if (item is not PropertyGrid)
+                        ChildEventBindig(item.Controls);
                 }
             }
         }
@@ -141,6 +154,7 @@
             _mControl = new MoveControl(control);
             _mControl.BackColor = Color.Transparent;
             control.Parent.Controls.Add(_mControl);
+            control.Focus();
         }
 
         private static void ClearParent(Control control)

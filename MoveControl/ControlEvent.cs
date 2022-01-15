@@ -7,5 +7,6 @@
         internal MouseEventHandler MouseMove;
         internal EventHandler LostFocus;
         internal MouseEventHandler MouseUp;
+        internal KeyEventHandler KeyUp;
     }
 }
