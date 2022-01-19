@@ -10,7 +10,7 @@
         /// <summary>
         /// 设置控件移动和调整大小
         /// </summary>
-        public static void CanMove(this Control control)
+        public static void BoundsChange(this Control control, bool canMove = true)
         {
             var controlEvent = new ControlEvent();
             controlEvent.MouseDown = (sender, e) => MouseDown(control);
@@ -37,7 +37,10 @@
 
                 _lastPoint = currentPoint;
             };
-            control.MouseMove += controlEvent.MouseMove;
+            if (canMove)
+            {
+                control.MouseMove += controlEvent.MouseMove;
+            }
 
             controlEvent.LostFocus = (sender, e) =>
             {
@@ -73,7 +76,10 @@
                     }
                 }
             };
-            control.MouseUp += controlEvent.MouseUp;
+            if (canMove)
+            {
+                control.MouseUp += controlEvent.MouseUp;
+            }
 
             controlEvent.KeyUp = (sender, e) =>
             {
@@ -91,21 +97,24 @@
         /// <summary>
         /// 停止控件移动和调整大小
         /// </summary>
-        public static void StopMove(this Control control)
+        public static void StopBoundsChange(this Control control)
         {
-            control.MouseDown -= _events[control].MouseDown;
-            control.MouseUp -= _events[control].MouseUp;
-            control.MouseMove -= _events[control].MouseMove;
-            control.MouseClick -= _events[control].MouseClick;
-            control.LostFocus -= _events[control].LostFocus;
-            control.KeyUp -= _events[control].KeyUp;
-            _events.Remove(control);
+            if (_events.Count > 0)
+            {
+                control.MouseDown -= _events[control].MouseDown;
+                control.MouseUp -= _events[control].MouseUp;
+                control.MouseMove -= _events[control].MouseMove;
+                control.MouseClick -= _events[control].MouseClick;
+                control.LostFocus -= _events[control].LostFocus;
+                control.KeyUp -= _events[control].KeyUp;
+                _events.Remove(control);
+            }
         }
 
         /// <summary>
         /// 设置控件内所以控件可以移动和调整大小
         /// </summary>
-        public static void CanMoveChild(this Control control)
+        public static void BoundsChangeChild(this Control control, bool canMove = true)
         {
             ChildEventBindig(control.Controls);
         }
@@ -113,7 +122,7 @@
         /// <summary>
         /// 停止控件内所以控件可以移动和调整大小
         /// </summary>
-        public static void StopMoveChild(this Control control)
+        public static void StopBoundsChangeChild(this Control control)
         {
             ChildEventUnBindig(control.Controls);
         }
@@ -124,22 +133,22 @@
             {
                 if (item is not MoveControl)
                 {
-                    item.StopMove();
-                    if (item is not PropertyGrid)
+                    item.StopBoundsChange();
+                    if (item is not PropertyGrid || item is not UserControl)
                         ChildEventBindig(item.Controls);
                 }
             }
         }
 
-        private static void ChildEventBindig(Control.ControlCollection controls)
+        private static void ChildEventBindig(Control.ControlCollection controls, bool canMove = true)
         {
             foreach (Control item in controls)
             {
                 if (item is not MoveControl)
                 {
-                    item.CanMove();
-                    if (item is not PropertyGrid)
-                        ChildEventBindig(item.Controls);
+                    item.BoundsChange(canMove);
+                    if (item is not PropertyGrid || item is not UserControl)
+                        ChildEventBindig(item.Controls, canMove);
                 }
             }
         }
