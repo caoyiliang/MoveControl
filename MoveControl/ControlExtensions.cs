@@ -55,25 +55,26 @@
                 {
                     var form = ctrl.FindForm();
                     var current = Cursor.Position;
-                    if (control.Parent is Form)
-                    {
-                        if (control.Name != ctrl.Name)
-                            if (ctrl.RectangleToScreen(ctrl.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle).Location))
+                    if (ctrl is not MoveControl)
+                        if (control.Parent is Form)
+                        {
+                            if (control.Name != ctrl.Name)
+                                if (ctrl.RectangleToScreen(ctrl.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle).Location))
+                                {
+                                    control.Parent = ctrl;
+                                    control.Location = ctrl.PointToClient(new Point(current.X - controlCursorPosition.X, current.Y - controlCursorPosition.Y));
+                                    MouseDown(control);
+                                }
+                        }
+                        else
+                        {
+                            if (!ctrl.Parent.RectangleToScreen(ctrl.Parent.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle).Location))
                             {
-                                control.Parent = ctrl;
-                                control.Location = ctrl.PointToClient(new Point(current.X - controlCursorPosition.X, current.Y - controlCursorPosition.Y));
+                                control.Parent = control.Parent.Parent;
+                                control.Location = control.Parent.PointToClient(new Point(current.X - controlCursorPosition.X, current.Y - controlCursorPosition.Y));
                                 MouseDown(control);
                             }
-                    }
-                    else
-                    {
-                        if (!ctrl.Parent.RectangleToScreen(ctrl.Parent.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle).Location))
-                        {
-                            control.Parent = control.Parent.Parent;
-                            control.Location = control.Parent.PointToClient(new Point(current.X - controlCursorPosition.X, current.Y - controlCursorPosition.Y));
-                            MouseDown(control);
                         }
-                    }
                 }
             };
             if (canMove)
