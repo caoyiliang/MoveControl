@@ -10,7 +10,7 @@
         /// <summary>
         /// 设置控件移动和调整大小
         /// </summary>
-        public static void BoundsChange(this Control control, bool canMove = true)
+        public static void CanChange(this Control control, bool canMove = true)
         {
             var controlEvent = new ControlEvent();
             controlEvent.MouseDown = (sender, e) => MouseDown(control);
@@ -58,7 +58,7 @@
                     if (control.Parent is Form)
                     {
                         if (control.Name != ctrl.Name)
-                            if (ctrl.RectangleToScreen(ctrl.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle)))
+                            if (ctrl.RectangleToScreen(ctrl.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle).Location))
                             {
                                 control.Parent = ctrl;
                                 control.Location = ctrl.PointToClient(new Point(current.X - controlCursorPosition.X, current.Y - controlCursorPosition.Y));
@@ -67,7 +67,7 @@
                     }
                     else
                     {
-                        if (!ctrl.Parent.RectangleToScreen(ctrl.Parent.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle)))
+                        if (!ctrl.Parent.RectangleToScreen(ctrl.Parent.ClientRectangle).Contains(control.RectangleToScreen(control.ClientRectangle).Location))
                         {
                             control.Parent = control.Parent.Parent;
                             control.Location = control.Parent.PointToClient(new Point(current.X - controlCursorPosition.X, current.Y - controlCursorPosition.Y));
@@ -97,7 +97,7 @@
         /// <summary>
         /// 停止控件移动和调整大小
         /// </summary>
-        public static void StopBoundsChange(this Control control)
+        public static void StopChange(this Control control)
         {
             if (_events.Count > 0)
             {
@@ -114,7 +114,7 @@
         /// <summary>
         /// 设置控件内所以控件可以移动和调整大小
         /// </summary>
-        public static void BoundsChangeChild(this Control control, bool canMove = true)
+        public static void CanChangeChild(this Control control, bool canMove = true)
         {
             ChildEventBindig(control.Controls);
         }
@@ -122,7 +122,7 @@
         /// <summary>
         /// 停止控件内所以控件可以移动和调整大小
         /// </summary>
-        public static void StopBoundsChangeChild(this Control control)
+        public static void StopChangeChild(this Control control)
         {
             ChildEventUnBindig(control.Controls);
         }
@@ -133,7 +133,7 @@
             {
                 if (item is not MoveControl)
                 {
-                    item.StopBoundsChange();
+                    item.StopChange();
                     if (item is not PropertyGrid || item is not UserControl)
                         ChildEventBindig(item.Controls);
                 }
@@ -146,7 +146,7 @@
             {
                 if (item is not MoveControl)
                 {
-                    item.BoundsChange(canMove);
+                    item.CanChange(canMove);
                     if (item is not PropertyGrid || item is not UserControl)
                         ChildEventBindig(item.Controls, canMove);
                 }
