@@ -1,6 +1,6 @@
 ﻿namespace MoveControl
 {
-    partial class VerticalStack
+    partial class StackPanel
     {
         /// <summary>
         /// 必需的设计器变量。
