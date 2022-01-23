@@ -6,6 +6,7 @@ namespace MoveControl
     {
         private Orientation _orientation = Orientation.Vertical;
 
+        [Browsable(false)]
         public List<Control> StackControls { get; } = new List<Control>();
 
         [Category("布局"), Description("获取或设置一个值，该值指示子元素是垂直堆叠还是水平堆叠。")]
@@ -30,13 +31,9 @@ namespace MoveControl
             if (e.Control is not MoveControl)
             {
                 StackControls.Add(e.Control);
-                e.Control.Paint += Control_Paint;
+                e.Control.Paint += (sender, e) => SizeChange();
+                e.Control.SizeChanged += (sender, e) => SizeChange();
             }
-        }
-
-        private void Control_Paint(object? sender, PaintEventArgs e)
-        {
-            SizeChange();
         }
 
         private void VerticalStack_ControlRemoved(object? sender, ControlEventArgs e)

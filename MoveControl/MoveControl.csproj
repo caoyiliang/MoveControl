@@ -8,7 +8,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>CSoft.$(AssemblyName)</PackageId>
 		<Authors>CSoft</Authors>
-		<Version>6.0.9</Version>
+		<Version>6.1.0</Version>
 		<PackageIcon>logo.png</PackageIcon>
 		<RepositoryUrl>https://github.com/caoyiliang/MoveControl</RepositoryUrl>
 		<Description>
