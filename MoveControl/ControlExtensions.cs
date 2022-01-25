@@ -204,13 +204,13 @@ namespace MoveControl
             }
         }
 
-        private static T Clone<T>(this T controlToClone) where T : Control
+        private static T Clone<T>(this T controlToClone, bool isChild = false) where T : Control
         {
             var type = controlToClone.GetType();
             PropertyInfo[] controlProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
             T instance = (T)Activator.CreateInstance(type);
-
+            if (!isChild) controlToClone.Parent.Controls.Add(instance);
             foreach (PropertyInfo propInfo in controlProperties)
             {
                 if (IsClonable(propInfo))
@@ -224,14 +224,13 @@ namespace MoveControl
                 }
             }
 
-            foreach (Control item in controlToClone.Controls)
-            {
-                var ctrl = item.Clone();
-                instance.Controls.Add(ctrl);
-                ctrl.CanChange();
-            }
-
-            instance.Parent = controlToClone.Parent;
+            if (controlToClone is not UserControl)
+                foreach (Control item in controlToClone.Controls)
+                {
+                    var ctrl = item.Clone(true);
+                    instance.Controls.Add(ctrl);
+                    ctrl.CanChange();
+                }
 
             return instance;
         }
