@@ -1,4 +1,7 @@
-﻿namespace MoveControl
+﻿using System.ComponentModel;
+using System.Reflection;
+
+namespace MoveControl
 {
     public static class ControlExtensions
     {
@@ -7,10 +10,11 @@
 
         private static Dictionary<Control, ControlEvent> _events = new();
         private static Point controlCursorPosition;
+
         /// <summary>
         /// 设置控件移动和调整大小
         /// </summary>
-        public static void CanChange(this Control control, bool canMove = true)
+        public static void CanChange<T>(this T control, bool canMove = true) where T : Control
         {
             var controlEvent = new ControlEvent();
             controlEvent.MouseDown = (sender, e) => MouseDown(control);
@@ -89,6 +93,12 @@
                     control.Dispose();
                     _events.Remove(control);
                 }
+                else if (e.Control && e.KeyCode == Keys.C)
+                {
+                    var ctrl = control.Clone();
+                    ctrl.CanChange();
+                    ctrl.Parent.Refresh();
+                }
             };
             control.KeyUp += controlEvent.KeyUp;
 
@@ -98,7 +108,7 @@
         /// <summary>
         /// 停止控件移动和调整大小
         /// </summary>
-        public static void StopChange(this Control control)
+        public static void StopChange<T>(this T control) where T : Control
         {
             if (_events.Count > 0)
             {
@@ -192,6 +202,48 @@
                 }
                 ClearChild(ctrl);
             }
+        }
+
+        private static T Clone<T>(this T controlToClone) where T : Control
+        {
+            var type = controlToClone.GetType();
+            PropertyInfo[] controlProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            T instance = (T)Activator.CreateInstance(type);
+
+            foreach (PropertyInfo propInfo in controlProperties)
+            {
+                if (IsClonable(propInfo))
+                {
+                    if (propInfo.Name != "Location")
+                    {
+                        var value = propInfo.GetValue(controlToClone, null);
+                        if (propInfo.Name == "Name") value = null;
+                        propInfo.SetValue(instance, value, null);
+                    }
+                }
+            }
+
+            foreach (Control item in controlToClone.Controls)
+            {
+                var ctrl = item.Clone();
+                instance.Controls.Add(ctrl);
+                ctrl.CanChange();
+            }
+
+            instance.Parent = controlToClone.Parent;
+
+            return instance;
+        }
+
+        private static bool IsClonable(PropertyInfo prop)
+        {
+            var browsableAttr = prop.GetCustomAttribute(typeof(BrowsableAttribute), true) as BrowsableAttribute;
+            var editorBrowsableAttr = prop.GetCustomAttribute(typeof(EditorBrowsableAttribute), true) as EditorBrowsableAttribute;
+
+            return prop.CanWrite
+                && (browsableAttr == null || browsableAttr.Browsable == true)
+                && (editorBrowsableAttr == null || editorBrowsableAttr.State != EditorBrowsableState.Advanced);
         }
     }
 }
