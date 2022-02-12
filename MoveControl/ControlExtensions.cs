@@ -223,6 +223,8 @@ namespace MoveControl
                 }
             }
 
+            if (!isChild) instance.Parent = controlToClone.Parent;
+
             if (controlToClone is not UserControl)
             {
                 Control item = controlToClone.GetNextControl(null, true);
@@ -235,7 +237,6 @@ namespace MoveControl
                 }
             }
 
-            if (!isChild) instance.Parent = controlToClone.Parent;
             return instance;
         }
 
