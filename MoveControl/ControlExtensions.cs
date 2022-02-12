@@ -14,7 +14,7 @@ namespace MoveControl
         /// <summary>
         /// 设置控件移动和调整大小
         /// </summary>
-        public static void CanChange<T>(this T control, bool canMove = true) where T : Control
+        public static void CanChange(this Control control, bool canMove = true)
         {
             var controlEvent = new ControlEvent();
             controlEvent.MouseDown = (sender, e) => MouseDown(control);
@@ -96,8 +96,8 @@ namespace MoveControl
                 else if (e.Control && e.KeyCode == Keys.C)
                 {
                     var ctrl = control.Clone();
+                    ctrl.Show();
                     ctrl.CanChange();
-                    ctrl.Parent.Refresh();
                 }
             };
             control.KeyUp += controlEvent.KeyUp;
@@ -108,7 +108,7 @@ namespace MoveControl
         /// <summary>
         /// 停止控件移动和调整大小
         /// </summary>
-        public static void StopChange<T>(this T control) where T : Control
+        public static void StopChange(this Control control)
         {
             if (_events.Count > 0)
             {
@@ -127,7 +127,7 @@ namespace MoveControl
         /// </summary>
         public static void CanChangeChild(this Control control, bool canMove = true)
         {
-            ChildEventBindig(control.Controls);
+            ChildEventBindig(control.Controls, canMove);
         }
 
         /// <summary>
@@ -208,9 +208,8 @@ namespace MoveControl
         {
             var type = controlToClone.GetType();
             PropertyInfo[] controlProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
             T instance = (T)Activator.CreateInstance(type);
-            if (!isChild) controlToClone.Parent.Controls.Add(instance);
+
             foreach (PropertyInfo propInfo in controlProperties)
             {
                 if (IsClonable(propInfo))
@@ -225,13 +224,18 @@ namespace MoveControl
             }
 
             if (controlToClone is not UserControl)
-                foreach (Control item in controlToClone.Controls)
+            {
+                Control item = controlToClone.GetNextControl(null, true);
+                while (item != null)
                 {
                     var ctrl = item.Clone(true);
                     instance.Controls.Add(ctrl);
                     ctrl.CanChange();
+                    item = controlToClone.GetNextControl(item, true);
                 }
+            }
 
+            if (!isChild) instance.Parent = controlToClone.Parent;
             return instance;
         }
 
